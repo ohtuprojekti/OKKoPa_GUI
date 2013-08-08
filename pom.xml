@@ -3,11 +3,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>fi.helsinki.cs</groupId>
-    <artifactId>okkopa_gui</artifactId>
+    <artifactId>OKKoPa_GUI</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>war</packaging>
 
-    <name>okkopa_gui</name>
+    <name>OKKoPa_GUI</name>
 
     <properties>
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
