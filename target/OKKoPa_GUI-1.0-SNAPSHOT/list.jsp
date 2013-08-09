@@ -10,7 +10,7 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>OKKoPa viitteiden rekisteröinti</title>
+        <title>${message}</title>
     </head>
     <body>
         <h1>${message}</h1>
@@ -18,7 +18,7 @@
         <p>${warning}</p>
 
         <form name="newReference"
-              action="${pageContext.request.contextPath}/AddReference"
+              action="${pageContext.request.contextPath}/addReference"
               method="post">
             <table>
                 <tr>

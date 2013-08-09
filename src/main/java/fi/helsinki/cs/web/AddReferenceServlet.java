@@ -3,7 +3,6 @@ package fi.helsinki.cs.web;
 import fi.helsinki.cs.okkopa.reference.Reference;
 import fi.helsinki.cs.okkopa.reference.Warning;
 import java.io.IOException;
-import java.io.PrintWriter;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -12,7 +11,6 @@ import org.apache.commons.validator.EmailValidator;
 
 public class AddReferenceServlet extends HttpServlet {
 
-    private References references = new References();
     private Reference reference;
     private String id;
     private String code;
@@ -33,27 +31,17 @@ public class AddReferenceServlet extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         noErrorsSoFar = true;
-        
+
         getIDCodeEmailByForm(request);
-        
-        Warning.setWarning("");
-        
-        emailValidator = EmailValidator.getInstance();
-        if(emailValidator.isValid(email) == false) {
-            Warning.setWarning("Sähköpostisi oli väärin kirjoitettu, tarkista virheet.");
-            noErrorsSoFar = false;
-        }
-        
-        typos = checkIfTypo();
-        if(noErrorsSoFar && typos  == false) {
-            //do the stuff for DB.
-            Warning.addWarning("Tietosi on nyt lisätty kantaan, ja konseptisi tulee sinulle.");
+        Warning.clearWarnings();
+
+        if (id != null && code != null && email != null) {
+            checkUsername();
+            checkEmail();
+            checkTyposOfReference();
         }
 
-        Ref newRef = new Ref(id, code, email);
-        references.addReference(newRef);
-
-        request.getRequestDispatcher("/List").forward(request, response);
+        request.getRequestDispatcher("/list").forward(request, response);
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
@@ -105,29 +93,56 @@ public class AddReferenceServlet extends HttpServlet {
 
     private boolean checkIfTypo() throws NumberFormatException {
         reference = new Reference();
-        
+
         if (!code.equals("")) {
-            
-            boolean joo = true;
-            try {
-                int luku = Integer.valueOf(code);
-            } catch(NumberFormatException e) {
-                joo = false;
-            }
-            
-            if (reference.checkReference(code) || (joo && reference.checkReferenceNumber(Integer.valueOf(code)))) {
+            boolean stringContainsInteger = stringContainsInteger();
+
+            if (reference.checkReference(code) || (stringContainsInteger && reference.checkReferenceNumber(Integer.valueOf(code)))) {
                 return false;
             } else {
                 setReferenceTypoWarning();
                 return true;
             }
         }
-        setReferenceTypoWarning();  
+        setReferenceTypoWarning();
         return true;
     }
 
     private void setReferenceTypoWarning() {
         String warning = "Kirjoitit viitteesi väärin, tarkista oikeinkirjoitus. ";
-        Warning.addWarning(warning);
+        Warning.setWarning(warning);
+    }
+
+    private boolean stringContainsInteger() {
+        boolean stringContainsInteger = true;
+        try {
+            int tempTry = Integer.valueOf(code);
+        } catch (NumberFormatException e) {
+            stringContainsInteger = false;
+        }
+        return stringContainsInteger;
+    }
+
+    private void checkEmail() {
+        emailValidator = EmailValidator.getInstance();
+        if (emailValidator.isValid(email) == false) {
+            Warning.setWarning("Sähköpostisi oli väärin kirjoitettu, tarkista virheet.");
+            noErrorsSoFar = false;
+        }
+    }
+
+    private void checkTyposOfReference() throws NumberFormatException {
+        typos = checkIfTypo();
+        if (noErrorsSoFar && typos == false) {
+            //do the stuff for DB.
+            Warning.setWarning("Tietosi on nyt lisätty kantaan, ja konseptisi tulee sinulle.");
+        }
+    }
+
+    private void checkUsername() {
+        if (id.length() <= 2) {
+            Warning.setWarning("Käyttäjätunnus pitää olla yli kaksi merkkiä pitkä.");
+            noErrorsSoFar = false;
+        }
     }
 }
