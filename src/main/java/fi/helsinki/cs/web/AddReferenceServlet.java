@@ -1,23 +1,25 @@
 package fi.helsinki.cs.web;
 
+import fi.helsinki.cs.okkopa.database.OkkopaDatabase;
 import fi.helsinki.cs.okkopa.reference.Reference;
 import fi.helsinki.cs.okkopa.reference.Warning;
 import java.io.IOException;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.validator.EmailValidator;
 
 public class AddReferenceServlet extends HttpServlet {
 
     private Reference reference;
     private String id;
     private String code;
-    private String email;
-    private EmailValidator emailValidator;
     private boolean noErrorsSoFar;
     private boolean typos;
+    private OkkopaDatabase database;
 
     /**
      * Processes requests for both HTTP
@@ -30,18 +32,38 @@ public class AddReferenceServlet extends HttpServlet {
      * @throws IOException if an I/O error occurs
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        noErrorsSoFar = true;
+        try {
+            noErrorsSoFar = true;
 
-        getIDCodeEmailByForm(request);
-        Warning.clearWarnings();
+            getIDCodeByForm(request);
+            Warning.clearWarnings();
 
-        if (id != null && code != null && email != null) {
-            checkUsername();
-            checkEmail();
-            checkTyposOfReference();
+            if (id != null && code != null) {
+                checkUsername();
+                if (noErrorsSoFar == true) {
+                    noErrorsSoFar = checkIfTypo();
+                }
+                if (noErrorsSoFar == true) {
+                    if (OkkopaDatabase.isOpen() == false) {
+                        database = new OkkopaDatabase();
+                    }
+                    if (OkkopaDatabase.QRCodeExists(code)) {
+                        if (OkkopaDatabase.addUSer(code, id)) {
+                            Warning.setWarning("homma OK! Koe tulee sinulle kunhan se on tarkistettu.");
+                        } else {
+                            Warning.setWarning("Joku oli jo rekisteröitynyt antamallesi QR-koodille. Ota yhteyttä Ossiin, ja selvitä hässäkkä.");
+                        }
+                    } else {
+                        Warning.setWarning("antamaasi viitettä ei löytynyt, etkai vaan yritä syöttää paskaa sisään?");
+                    }
+                    OkkopaDatabase.closeConnectionSource();
+                }
+            }
+
+            request.getRequestDispatcher("/list").forward(request, response);
+        } catch (SQLException ex) {
+            Logger.getLogger(AddReferenceServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
-
-        request.getRequestDispatcher("/list").forward(request, response);
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
@@ -85,10 +107,9 @@ public class AddReferenceServlet extends HttpServlet {
         return "Short description";
     }// </editor-fold>
 
-    private void getIDCodeEmailByForm(HttpServletRequest request) {
+    private void getIDCodeByForm(HttpServletRequest request) {
         id = request.getParameter("id");
         code = request.getParameter("code");
-        email = request.getParameter("email");
     }
 
     private boolean checkIfTypo() throws NumberFormatException {
@@ -98,14 +119,14 @@ public class AddReferenceServlet extends HttpServlet {
             boolean stringContainsInteger = stringContainsInteger();
 
             if (reference.checkReference(code) || (stringContainsInteger && reference.checkReferenceNumber(Integer.valueOf(code)))) {
-                return false;
+                return true;
             } else {
                 setReferenceTypoWarning();
-                return true;
+                return false;
             }
         }
         setReferenceTypoWarning();
-        return true;
+        return false;
     }
 
     private void setReferenceTypoWarning() {
@@ -121,22 +142,6 @@ public class AddReferenceServlet extends HttpServlet {
             stringContainsInteger = false;
         }
         return stringContainsInteger;
-    }
-
-    private void checkEmail() {
-        emailValidator = EmailValidator.getInstance();
-        if (emailValidator.isValid(email) == false) {
-            Warning.setWarning("Sähköpostisi oli väärin kirjoitettu, tarkista virheet.");
-            noErrorsSoFar = false;
-        }
-    }
-
-    private void checkTyposOfReference() throws NumberFormatException {
-        typos = checkIfTypo();
-        if (noErrorsSoFar && typos == false) {
-            //do the stuff for DB.
-            Warning.setWarning("Tietosi on nyt lisätty kantaan, ja konseptisi tulee sinulle.");
-        }
     }
 
     private void checkUsername() {

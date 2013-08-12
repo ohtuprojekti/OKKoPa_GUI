@@ -28,9 +28,6 @@
                     <td>Viite</td><td><input type="text" name="code" /></td>
                 </tr>
                 <tr>
-                    <td>Sähköpostiosoite (valinnainen)</td><td><input type="text" name="email" /></td>
-                </tr>
-                <tr>
                     <td></td><td><input type="submit" name="Lähetä" /></td>
                 </tr>
             </table>

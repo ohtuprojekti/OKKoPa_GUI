@@ -3,12 +3,10 @@ package fi.helsinki.cs.web;
 public class Ref {
     private String id;
     private String code;
-    private String email;
 
     public Ref(String id, String code, String email) {
         this.id = id;
         this.code = code;
-        this.email = email;
     }
 
     public String getId() {
@@ -25,13 +23,5 @@ public class Ref {
 
     public void setCode(String code) {
         this.code = code;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 }

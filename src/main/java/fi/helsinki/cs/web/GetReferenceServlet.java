@@ -1,31 +1,29 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package fi.helsinki.cs.web;
 
+import fi.helsinki.cs.okkopa.database.OkkopaDatabase;
 import fi.helsinki.cs.okkopa.reference.Reference;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 
-/**
- *
- * @author hannahir
- */
 public class GetReferenceServlet extends HttpServlet {
 
     private String amount;
     private String size;
     private String letters;
     private Reference reference;
+    private OkkopaDatabase database;
+    private PrintWriter writer;
 
     /**
      * Processes requests for both HTTP
@@ -41,26 +39,29 @@ public class GetReferenceServlet extends HttpServlet {
             throws ServletException, IOException {
         try {
             // get your file as InputStream
-            PrintWriter writer = new PrintWriter("references.txt", "UTF-8");
-            
+            writer = new PrintWriter("references.txt", "UTF-8");
+
             getAmountSizeLettersByForm(request);
-            
-            reference = new Reference(Integer.valueOf(size));
-            
-            for (int i = 0; i < Integer.valueOf(amount); i++) {
-                if(letters.equals("yes")) {
-                    writer.println(reference.getReference());
-                } else {
-                    writer.println(reference.getReferenceNumber());
-                }
+
+            if (OkkopaDatabase.isOpen() == false) {
+                database = new OkkopaDatabase();
             }
 
+            reference = new Reference(Integer.valueOf(size));
+
+            for (int i = 0; i < Integer.valueOf(amount); i++) {
+                String line = getReference();
+                i = addToDBAndFileOrDoAgain(line, i);
+            }
             writer.close();
-            
-            
+
+            OkkopaDatabase.closeConnectionSource();
+
             addFileAsResponse(response);
         } catch (IOException ex) {
             throw new RuntimeException("IOError writing file to output stream");
+        } catch (SQLException ex) {
+            Logger.getLogger(GetReferenceServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -118,5 +119,27 @@ public class GetReferenceServlet extends HttpServlet {
         // copy it to response's OutputStream
         IOUtils.copy(is, response.getOutputStream());
         response.flushBuffer();
+    }
+
+    private int addToDBAndFileOrDoAgain(String line, int i) throws SQLException {
+        if (line != null || line.equals("") == false) {
+            if (OkkopaDatabase.addQRCode(line) == false) {
+                i--;
+                System.out.println("möö");
+            } else {
+                writer.println(line);
+            }
+        }
+        return i;
+    }
+
+    private String getReference() {
+        String line;
+        if (letters.equals("yes")) {
+            line = reference.getReference();
+        } else {
+            line = "" + reference.getReferenceNumber();
+        }
+        return line;
     }
 }
