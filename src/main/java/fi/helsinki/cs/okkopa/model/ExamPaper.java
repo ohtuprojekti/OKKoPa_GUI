@@ -40,7 +40,7 @@ public class ExamPaper {
 
     public void addPageImage(BufferedImage pageAsImage) {
         if (pageImages == null) {
-            this.pageImages = new ArrayList<>();
+            this.pageImages = new ArrayList<BufferedImage>();
         }
         this.pageImages.add(pageAsImage);
     }
