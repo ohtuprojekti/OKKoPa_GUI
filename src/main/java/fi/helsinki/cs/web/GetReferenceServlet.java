@@ -2,19 +2,34 @@ package fi.helsinki.cs.web;
 
 import fi.helsinki.cs.okkopa.database.OkkopaDatabase;
 import fi.helsinki.cs.okkopa.reference.Reference;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.imageio.ImageIO;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import net.glxn.qrgen.QRCode;
+import net.glxn.qrgen.image.ImageType;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.zeroturnaround.zip.ZipUtil;
 
 public class GetReferenceServlet extends HttpServlet {
 
@@ -24,6 +39,19 @@ public class GetReferenceServlet extends HttpServlet {
     private Reference reference;
     private OkkopaDatabase database;
     private PrintWriter writer;
+    private Graphics2D g2d;
+    private BufferedImage bufferedImage;
+    private int height;
+    private int width;
+    private Font font;
+    private FontMetrics fm;
+    private File file;
+    private BufferedImage img;
+    private FileOutputStream outputStream;
+    private ByteArrayOutputStream stream;
+    private String back;
+    private AffineTransform orig;
+    private String url;
 
     /**
      * Processes requests for both HTTP
@@ -39,9 +67,11 @@ public class GetReferenceServlet extends HttpServlet {
             throws ServletException, IOException {
         try {
             // get your file as InputStream
-            writer = new PrintWriter("references.txt", "UTF-8");
+            getAmountSizeLettersBackByForm(request);
 
-            getAmountSizeLettersByForm(request);
+            if (back.equals("txt")) {
+                writer = new PrintWriter("references.txt", "UTF-8");
+            }
 
             if (OkkopaDatabase.isOpen() == false) {
                 database = new OkkopaDatabase();
@@ -53,7 +83,10 @@ public class GetReferenceServlet extends HttpServlet {
                 String line = getReference();
                 i = addToDBAndFileOrDoAgain(line, i);
             }
-            writer.close();
+
+            if (back.equals("txt")) {
+                writer.close();
+            }
 
             OkkopaDatabase.closeConnectionSource();
 
@@ -106,28 +139,41 @@ public class GetReferenceServlet extends HttpServlet {
         return "Short description";
     }// </editor-fold>
 
-    private void getAmountSizeLettersByForm(HttpServletRequest request) {
+    private void getAmountSizeLettersBackByForm(HttpServletRequest request) {
         amount = request.getParameter("amount");
         size = request.getParameter("size");
         letters = request.getParameter("letters");
+        back = request.getParameter("back");
     }
 
     private void addFileAsResponse(HttpServletResponse response) throws IOException, FileNotFoundException {
-        InputStream is = new FileInputStream("references.txt");
-        response.setContentType("text/plain");
-        response.setHeader("Content-Disposition", "attachment; filename=references.txt");
-        // copy it to response's OutputStream
-        IOUtils.copy(is, response.getOutputStream());
+        if (back.equals("txt")) {
+            InputStream is = new FileInputStream("references.txt");
+            response.setContentType("text/plain");
+            response.setHeader("Content-Disposition", "attachment; filename=references.txt");
+            IOUtils.copy(is, response.getOutputStream());
+        } else {
+            ZipUtil.pack(new File("temp/"), new File("references.zip"));
+            InputStream is = new FileInputStream("references.zip");
+            response.setContentType("application/zip");
+            response.setHeader("Content-Disposition", "attachment; filename=references.zip");
+            IOUtils.copy(is, response.getOutputStream());
+            FileUtils.deleteDirectory(new File("temp"));
+        }
         response.flushBuffer();
     }
 
-    private int addToDBAndFileOrDoAgain(String line, int i) throws SQLException {
+    private int addToDBAndFileOrDoAgain(String line, int i) throws SQLException, FileNotFoundException, IOException {
         if (line != null || line.equals("") == false) {
             if (OkkopaDatabase.addQRCode(line) == false) {
                 i--;
                 System.out.println("möö");
             } else {
-                writer.println(line);
+                if (back.equals("txt")) {
+                    writer.println(line);
+                } else {
+                    createFileForZip(line);
+                }
             }
         }
         return i;
@@ -141,5 +187,68 @@ public class GetReferenceServlet extends HttpServlet {
             line = "" + reference.getReferenceNumber();
         }
         return line;
+    }
+
+    private void createFileForZip(String line) throws FileNotFoundException, IOException {
+        makeQRCodeImage(line);
+        makeGraphics2DForRender();
+
+        makeFontSettings();
+        drawUrlToImage();
+        drawTextToImage(line);
+
+        closeImages();
+
+        writeToDirectoryToWaitForZip(line);
+    }
+
+    private void makeQRCodeImage(String line) throws FileNotFoundException, IOException {
+        stream = QRCode.from(line).to(ImageType.PNG).withSize(500, 500).stream();
+
+        outputStream = new FileOutputStream("temp.png");
+        stream.writeTo(outputStream);
+
+        img = ImageIO.read(new File("temp.png"));
+    }
+
+    private void makeGraphics2DForRender() {
+        width = img.getWidth();
+        height = img.getHeight();
+        bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        g2d = bufferedImage.createGraphics();
+        g2d.drawImage(img, 0, 0, Color.WHITE, null);
+    }
+
+    private void makeFontSettings() {
+        font = new Font("Serif", Font.BOLD, 24);
+        g2d.setFont(font);
+        g2d.setPaint(Color.BLACK);
+        fm = g2d.getFontMetrics();
+    }
+
+    private void drawUrlToImage() {
+        url = "http://cs.helsinki.fi/okkopa";
+        g2d.drawString(url, width / 2 - (fm.stringWidth(url) / 2), fm.getHeight() + 20);
+    }
+
+    private void drawTextToImage(String line) {
+        g2d.drawString(line, width / 2 - (fm.stringWidth(line) / 2), height - 20);
+    }
+
+    private void closeImages() {
+        g2d.dispose();
+    }
+
+    private void writeToDirectoryToWaitForZip(String line) throws IOException {
+        mkDirIfNotExists();
+        file = new File("temp/" + line + ".png");
+        ImageIO.write(bufferedImage, "png", file);
+    }
+
+    private void mkDirIfNotExists() {
+        File theDir = new File("temp/");
+        if (!theDir.exists()) {
+            theDir.mkdir();
+        }
     }
 }

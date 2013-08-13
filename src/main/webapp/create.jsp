@@ -83,6 +83,11 @@
                         <input type="radio" name="letters" value="no">Ei</td>
                 </tr>
                 <tr>
+                    <td>Mitä palautetaan</td><td>
+                        <input type="radio" name="back" value="txt">txt-tiedosto viitteistä</td><td></td></tr><tr><td></td><td>
+                        <input type="radio" name="back" value="zip" checked="checked">zip-tiedosto luoduista QR-koodeista</td>
+                </tr>
+                <tr>
                     <td></td><td><input type="submit" name="Lähetä" /></td>
                 </tr>
             </table>
