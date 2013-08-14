@@ -17,12 +17,8 @@
         <servlet-class>fi.helsinki.cs.web.GetReferenceServlet</servlet-class>
     </servlet>
     <servlet-mapping>
-        <servlet-name>ListServlet</servlet-name>
-        <url-pattern>/list</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
         <servlet-name>AddReferenceServlet</servlet-name>
-        <url-pattern>/addReference</url-pattern>
+        <url-pattern>/list</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>CreateServlet</servlet-name>

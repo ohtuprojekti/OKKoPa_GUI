@@ -18,7 +18,7 @@
         <p>${warning}</p>
 
         <form name="newReference"
-              action="${pageContext.request.contextPath}/addReference"
+              action="${pageContext.request.contextPath}/list"
               method="post">
             <table>
                 <tr>

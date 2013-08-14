@@ -30,6 +30,7 @@ import net.glxn.qrgen.image.ImageType;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.zeroturnaround.zip.ZipUtil;
+import sun.font.FontFamily;
 
 public class GetReferenceServlet extends HttpServlet {
 
@@ -214,9 +215,9 @@ public class GetReferenceServlet extends HttpServlet {
     private void makeGraphics2DForRender() {
         width = img.getWidth();
         height = img.getHeight();
-        bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        bufferedImage = new BufferedImage(width + 300, height - 100, BufferedImage.TYPE_INT_RGB);
         g2d = bufferedImage.createGraphics();
-        g2d.drawImage(img, 0, 0, Color.WHITE, null);
+        g2d.drawImage(img, -50, -50, Color.WHITE, null);
     }
 
     private void makeFontSettings() {
@@ -227,12 +228,15 @@ public class GetReferenceServlet extends HttpServlet {
     }
 
     private void drawUrlToImage() {
+        g2d.setColor(Color.WHITE);
+        g2d.fillRect(width-50, 0, 400, height);
         url = "http://cs.helsinki.fi/okkopa";
-        g2d.drawString(url, width / 2 - (fm.stringWidth(url) / 2), fm.getHeight() + 20);
+        g2d.setPaint(Color.BLACK);
+        g2d.drawString(url, width + 200/2 - (fm.stringWidth(url) / 2), height/2 - 10);
     }
 
     private void drawTextToImage(String line) {
-        g2d.drawString(line, width / 2 - (fm.stringWidth(line) / 2), height - 20);
+        g2d.drawString(line, width + 200/2 - (fm.stringWidth(line) / 2), height/2 - 90);
     }
 
     private void closeImages() {

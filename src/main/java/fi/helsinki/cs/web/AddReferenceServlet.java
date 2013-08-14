@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -60,7 +61,12 @@ public class AddReferenceServlet extends HttpServlet {
                 }
             }
 
-            request.getRequestDispatcher("/list").forward(request, response);
+            request.setAttribute("message", "OKKoPa viitteiden rekisteröinti");
+
+            request.setAttribute("warning", Warning.getWarning());
+
+            RequestDispatcher dispatcher = request.getRequestDispatcher("list.jsp");
+            dispatcher.forward(request, response);
         } catch (SQLException ex) {
             Logger.getLogger(AddReferenceServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
