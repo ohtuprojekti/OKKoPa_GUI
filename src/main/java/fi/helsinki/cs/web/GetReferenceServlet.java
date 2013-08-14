@@ -193,8 +193,8 @@ public class GetReferenceServlet extends HttpServlet {
     private void createFileForZip(String line) throws FileNotFoundException, IOException {
         makeQRCodeImage(line);
         makeGraphics2DForRender();
-
-        makeFontSettings();
+        fillRestWithWhite();
+        
         drawUrlToImage();
         drawTextToImage(line);
 
@@ -220,22 +220,21 @@ public class GetReferenceServlet extends HttpServlet {
         g2d.drawImage(img, -50, -50, Color.WHITE, null);
     }
 
-    private void makeFontSettings() {
-        font = new Font("Serif", Font.BOLD, 24);
+    private void makeFontSettings(int size, Color c) {
+        font = new Font("Serif", Font.BOLD, size);
         g2d.setFont(font);
-        g2d.setPaint(Color.BLACK);
+        g2d.setPaint(c);
         fm = g2d.getFontMetrics();
     }
 
     private void drawUrlToImage() {
-        g2d.setColor(Color.WHITE);
-        g2d.fillRect(width-50, 0, 400, height);
         url = "http://cs.helsinki.fi/okkopa";
-        g2d.setPaint(Color.BLACK);
+        makeFontSettings(24, Color.BLACK);
         g2d.drawString(url, width + 200/2 - (fm.stringWidth(url) / 2), height/2 - 10);
     }
 
     private void drawTextToImage(String line) {
+        makeFontSettings(60, Color.BLACK);
         g2d.drawString(line, width + 200/2 - (fm.stringWidth(line) / 2), height/2 - 90);
     }
 
@@ -254,5 +253,10 @@ public class GetReferenceServlet extends HttpServlet {
         if (!theDir.exists()) {
             theDir.mkdir();
         }
+    }
+
+    private void fillRestWithWhite() {
+        g2d.setColor(Color.WHITE);
+        g2d.fillRect(width-50, 0, 400, height);
     }
 }
