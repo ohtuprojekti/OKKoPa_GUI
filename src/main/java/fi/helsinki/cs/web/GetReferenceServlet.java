@@ -234,7 +234,7 @@ public class GetReferenceServlet extends HttpServlet {
     }
 
     private void drawTextToImage(String line) {
-        makeFontSettings(60, Color.BLACK);
+        makeFontSettings(70, Color.BLACK);
         g2d.drawString(line, width + 200/2 - (fm.stringWidth(line) / 2), height/2 - 90);
     }
 
