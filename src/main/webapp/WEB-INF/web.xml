@@ -16,9 +16,17 @@
         <servlet-name>GetReferenceServlet</servlet-name>
         <servlet-class>fi.helsinki.cs.web.GetReferenceServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>FrontServlet</servlet-name>
+        <servlet-class>fi.helsinki.cs.web.FrontServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>GetFrontServlet</servlet-name>
+        <servlet-class>fi.helsinki.cs.web.GetFrontServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>AddReferenceServlet</servlet-name>
-        <url-pattern>/list</url-pattern>
+        <url-pattern>/add</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>CreateServlet</servlet-name>
@@ -27,6 +35,14 @@
     <servlet-mapping>
         <servlet-name>GetReferenceServlet</servlet-name>
         <url-pattern>/getreference</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>FrontServlet</servlet-name>
+        <url-pattern>/front</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>GetFrontServlet</servlet-name>
+        <url-pattern>/getfront</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>

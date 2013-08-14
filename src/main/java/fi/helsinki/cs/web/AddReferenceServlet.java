@@ -65,7 +65,7 @@ public class AddReferenceServlet extends HttpServlet {
 
             request.setAttribute("warning", Warning.getWarning());
 
-            RequestDispatcher dispatcher = request.getRequestDispatcher("list.jsp");
+            RequestDispatcher dispatcher = request.getRequestDispatcher("add.jsp");
             dispatcher.forward(request, response);
         } catch (SQLException ex) {
             Logger.getLogger(AddReferenceServlet.class.getName()).log(Level.SEVERE, null, ex);

@@ -11,8 +11,9 @@
     <body>
         <h1>OKKoPa</h1>
         <ul>
-            <li><a href="${pageContext.request.contextPath}/list">add</a></li>
+            <li><a href="${pageContext.request.contextPath}/add">add</a></li>
             <li><a href="${pageContext.request.contextPath}/create">create</a></li>
+            <li><a href="${pageContext.request.contextPath}/front">front</a></li>
         </ul>
     </body>
 </html>

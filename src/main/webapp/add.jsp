@@ -1,9 +1,3 @@
-<%-- 
-    Document   : list
-    Created on : 08-Aug-2013, 10:57:33
-    Author     : hannahir
---%>
-
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
@@ -18,7 +12,7 @@
         <p>${warning}</p>
 
         <form name="newReference"
-              action="${pageContext.request.contextPath}/list"
+              action="${pageContext.request.contextPath}/add"
               method="post">
             <table>
                 <tr>
