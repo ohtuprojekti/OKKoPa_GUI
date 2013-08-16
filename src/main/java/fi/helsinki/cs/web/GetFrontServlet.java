@@ -4,18 +4,49 @@
  */
 package fi.helsinki.cs.web;
 
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
+import javax.imageio.ImageIO;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import net.glxn.qrgen.QRCode;
+import net.glxn.qrgen.image.ImageType;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.zeroturnaround.zip.ZipUtil;
 
 /**
  *
  * @author tatutall
  */
 public class GetFrontServlet extends HttpServlet {
+
+    private String cource;
+    private ByteArrayOutputStream stream;
+    private OutputStream outputStream;
+    private BufferedImage img;
+    private int width;
+    private int height;
+    private BufferedImage bufferedImage;
+    private Graphics2D g2d;
+    private Font font;
+    private FontMetrics fm;
+    private File file;
+    private String url;
 
     /**
      * Processes requests for both HTTP
@@ -29,22 +60,19 @@ public class GetFrontServlet extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        PrintWriter out = response.getWriter();
-        try {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet GetFrontServlet</title>");            
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet GetFrontServlet at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        } finally {            
-            out.close();
-        }
+        cource = request.getParameter("cource");
+        
+        System.out.println(cource);
+
+        makeQRCodeImage(cource);
+        makeGraphics2DForRender();
+        drawTextToImage(cource);
+        drawUrlToImage();
+        closeImages();
+        
+        writeDownImage();
+
+        addFileAsResponse(response);
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
@@ -87,4 +115,56 @@ public class GetFrontServlet extends HttpServlet {
     public String getServletInfo() {
         return "Short description";
     }// </editor-fold>
+
+    private void makeQRCodeImage(String line) throws FileNotFoundException, IOException {
+        stream = QRCode.from(line).to(ImageType.PNG).withSize(500, 550).stream();
+
+        outputStream = new FileOutputStream("temp.png");
+        stream.writeTo(outputStream);
+
+        img = ImageIO.read(new File("temp.png"));
+    }
+
+    private void makeGraphics2DForRender() {
+        width = img.getWidth();
+        height = img.getHeight();
+        bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        g2d = bufferedImage.createGraphics();
+        g2d.drawImage(img, 0, 0, Color.WHITE, null);
+    }
+
+    private void makeFontSettings(int size, Color c) {
+        font = new Font("Serif", Font.BOLD, size);
+        g2d.setFont(font);
+        g2d.setPaint(c);
+        fm = g2d.getFontMetrics();
+    }
+
+    private void drawTextToImage(String line) {
+        makeFontSettings(45, Color.BLACK);
+        g2d.drawString(line, width / 2 - (fm.stringWidth(line) / 2), 50);
+    }
+    
+    private void drawUrlToImage() {
+        url = "http://cs.helsinki.fi/okkopa";
+        makeFontSettings(24, Color.BLACK);
+        g2d.drawString(url, width/2 - (fm.stringWidth(url) / 2), height - 50);
+    }
+
+    private void closeImages() {
+        g2d.dispose();
+    }
+
+    private void addFileAsResponse(HttpServletResponse response) throws IOException, FileNotFoundException {
+        InputStream is = new FileInputStream("temp.png");
+        response.setContentType("image/png");
+        response.setHeader("Content-Disposition", "attachment; filename=frontreference.png");
+        IOUtils.copy(is, response.getOutputStream());
+        response.flushBuffer();
+    }
+    
+    private void writeDownImage() throws IOException {
+        file = new File("temp.png");
+        ImageIO.write(bufferedImage, "png", file);
+    }
 }
