@@ -5,6 +5,7 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,7 +35,6 @@ public class GetFrontServlet extends HttpServlet {
 
     private String cource;
     private ByteArrayOutputStream stream;
-    private OutputStream outputStream;
     private BufferedImage img;
     private int width;
     private int height;
@@ -45,6 +45,7 @@ public class GetFrontServlet extends HttpServlet {
     private File file;
     private String url;
     private float PDFWidth;
+    private ByteArrayInputStream inStream;
 
     /**
      * Processes requests for both HTTP
@@ -68,7 +69,7 @@ public class GetFrontServlet extends HttpServlet {
         drawUrlToImage();
         closeImages();
 
-        writeDownImage();
+        makePDF();
 
         addFileAsResponse(response);
     }
@@ -124,11 +125,9 @@ public class GetFrontServlet extends HttpServlet {
 
     private void makeQRCodeImage(String line) throws FileNotFoundException, IOException {
         stream = QRCode.from(line).to(ImageType.PNG).withSize(500, 500).stream();
-
-        outputStream = new FileOutputStream("temp.png");
-        stream.writeTo(outputStream);
-
-        img = ImageIO.read(new File("temp.png"));
+        
+        inStream = new ByteArrayInputStream(stream.toByteArray());
+        img = ImageIO.read(inStream);
     }
 
     private void makeGraphics2DForRender() {
@@ -166,32 +165,32 @@ public class GetFrontServlet extends HttpServlet {
     }
 
     private void addFileAsResponse(HttpServletResponse response) throws IOException, FileNotFoundException {
-        InputStream is = new FileInputStream("temp.pdf");
+        InputStream is = new ByteArrayInputStream(stream.toByteArray());
         response.setContentType("application/pdf");
         response.setHeader("Content-Disposition", "attachment; filename=frontreference.pdf");
         IOUtils.copy(is, response.getOutputStream());
         response.flushBuffer();
     }
 
-    private void writeDownImage() throws IOException, COSVisitorException {
-        file = new File("temp.jpg");
-        ImageIO.write(bufferedImage, "jpg", file);
-
+    private void makePDF() throws IOException, COSVisitorException {
         PDDocument document = new PDDocument();
         PDPage page = new PDPage(PDPage.PAGE_SIZE_A3);
         document.addPage(page);
         
-        ;
+        addImageToPDF(document, page);
+        
+        stream.reset();
+        document.save(stream);
+    }
 
+    private void addImageToPDF(PDDocument document, PDPage page) throws IOException {
         PDXObjectImage ximage;
-        ximage = new PDJpeg(document, new FileInputStream("temp.jpg"));
-
+        ximage = new PDJpeg(document, bufferedImage);
+        
         PDFWidth = page.findCropBox().getWidth();
         
         PDPageContentStream contentStream = new PDPageContentStream(document, page, true, true);
         contentStream.drawXObject(ximage, 0, (page.findCropBox().getHeight() - PDFWidth) / 2, PDFWidth, PDFWidth);
         contentStream.close();
-        
-        document.save("temp.pdf");
     }
 }

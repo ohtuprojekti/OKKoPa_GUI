@@ -52,7 +52,7 @@ public class AddReferenceServlet extends HttpServlet {
             request.setAttribute("help", Settings.instance.getProperty("gui.add.help"));
             request.setAttribute("warning", Warning.getWarning());
 
-            RequestDispatcher dispatcher = request.getRequestDispatcher("add.jsp");
+            RequestDispatcher dispatcher = request.getRequestDispatcher("WEB-INF/add.jsp");
             dispatcher.forward(request, response);
         } catch (SQLException ex) {
             Logger.getLogger(AddReferenceServlet.class.getName()).log(Level.SEVERE, null, ex);

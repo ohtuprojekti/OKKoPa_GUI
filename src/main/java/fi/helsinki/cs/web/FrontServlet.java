@@ -70,7 +70,7 @@ public class FrontServlet extends HttpServlet {
 
         setCourcesForForm( request); 
 
-        RequestDispatcher dispatcher = request.getRequestDispatcher("front.jsp");
+        RequestDispatcher dispatcher = request.getRequestDispatcher("WEB-INF/front.jsp");
         dispatcher.forward(request, response);
     }
 

@@ -1,14 +1,23 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package fi.helsinki.cs.web;
 
 import fi.helsinki.cs.okkopa.database.Settings;
 import java.io.IOException;
+import java.io.PrintWriter;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class CreateServlet extends HttpServlet {
+/**
+ *
+ * @author tatutall
+ */
+public class IndexServlet extends HttpServlet {
 
     /**
      * Processes requests for both HTTP
@@ -22,11 +31,17 @@ public class CreateServlet extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.setAttribute("message", Settings.instance.getProperty("gui.create.header"));
-        request.setAttribute("help", Settings.instance.getProperty("gui.create.help"));
         
-        RequestDispatcher dispatcher = request.getRequestDispatcher("WEB-INF/create.jsp");
-        dispatcher.forward(request, response);
+        request.setAttribute("add", Settings.instance.getProperty("gui.add.link"));
+        request.setAttribute("create", Settings.instance.getProperty("gui.create.link"));
+        request.setAttribute("front", Settings.instance.getProperty("gui.front.link"));
+        
+        request.setAttribute("addInfo", Settings.instance.getProperty("gui.add.info"));
+        request.setAttribute("createInfo", Settings.instance.getProperty("gui.create.info"));
+        request.setAttribute("frontInfo", Settings.instance.getProperty("gui.front.info"));
+        
+        RequestDispatcher dispatcher = request.getRequestDispatcher("WEB-INF/index.jsp");
+            dispatcher.forward(request, response);
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
