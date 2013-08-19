@@ -21,6 +21,11 @@ import javax.servlet.http.HttpServletResponse;
 import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
 import org.apache.commons.io.IOUtils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.edit.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.graphics.xobject.PDJpeg;
+import org.apache.pdfbox.pdmodel.graphics.xobject.PDXObjectImage;
 
 public class GetFrontServlet extends HttpServlet {
 
@@ -50,7 +55,7 @@ public class GetFrontServlet extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         cource = request.getParameter("cource");
-        
+
         System.out.println(cource);
 
         makeQRCodeImage(cource);
@@ -58,7 +63,7 @@ public class GetFrontServlet extends HttpServlet {
         drawTextToImage(cource);
         drawUrlToImage();
         closeImages();
-        
+
         writeDownImage();
 
         addFileAsResponse(response);
@@ -135,13 +140,13 @@ public class GetFrontServlet extends HttpServlet {
 
     private void drawTextToImage(String line) {
         makeFontSettings(45, Color.BLACK);
-        g2d.drawString(line, (width * 3) / 2 - (fm.stringWidth(line) / 2), (height * 3)/2 + 50);
+        g2d.drawString(line, (width * 3) / 2 - (fm.stringWidth(line) / 2), (height * 3) / 2 + 50);
     }
-    
+
     private void drawUrlToImage() {
         url = "http://cs.helsinki.fi/okkopa";
         makeFontSettings(24, Color.BLACK);
-        g2d.drawString(url, (width * 3)/2 - (fm.stringWidth(url) / 2), (height * 3)/2 - 50);
+        g2d.drawString(url, (width * 3) / 2 - (fm.stringWidth(url) / 2), (height * 3) / 2 - 50);
     }
 
     private void closeImages() {
@@ -155,9 +160,20 @@ public class GetFrontServlet extends HttpServlet {
         IOUtils.copy(is, response.getOutputStream());
         response.flushBuffer();
     }
-    
+
     private void writeDownImage() throws IOException {
-        file = new File("temp.png");
-        ImageIO.write(bufferedImage, "png", file);
+        file = new File("temp.jpg");
+        ImageIO.write(bufferedImage, "jpg", file);
+
+        PDDocument document = new PDDocument();
+        PDPage page = new PDPage(PDPage.PAGE_SIZE_A3);
+        document.addPage(page);
+
+        PDXObjectImage ximage = null;
+        ximage = new PDJpeg(document, new FileInputStream("temp.png"));
+
+        PDPageContentStream contentStream = new PDPageContentStream(document, page, true, true);
+        contentStream.drawImage(ximage, 425, 675);
+        contentStream.close();
     }
 }
