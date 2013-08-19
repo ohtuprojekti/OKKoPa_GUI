@@ -55,8 +55,8 @@ public class FrontServlet extends HttpServlet {
         OracleConnector oc = new OracleConnector(new Settings("settings.xml"));
         oc.connect();
 
-        list = new ArrayList<>();
-        values = new ArrayList<>();
+        list = new ArrayList<String>();
+        values = new ArrayList<String>();
         
         List<CourseDbModel> cources = oc.getCourseList();
 

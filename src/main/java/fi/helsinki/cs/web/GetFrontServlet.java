@@ -17,7 +17,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import javax.imageio.ImageIO;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -25,9 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.zeroturnaround.zip.ZipUtil;
 
 /**
  *
@@ -117,7 +114,7 @@ public class GetFrontServlet extends HttpServlet {
     }// </editor-fold>
 
     private void makeQRCodeImage(String line) throws FileNotFoundException, IOException {
-        stream = QRCode.from(line).to(ImageType.PNG).withSize(500, 550).stream();
+        stream = QRCode.from(line).to(ImageType.PNG).withSize(500, 500).stream();
 
         outputStream = new FileOutputStream("temp.png");
         stream.writeTo(outputStream);
@@ -128,9 +125,13 @@ public class GetFrontServlet extends HttpServlet {
     private void makeGraphics2DForRender() {
         width = img.getWidth();
         height = img.getHeight();
-        bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        bufferedImage = new BufferedImage(width * 3, height * 3, BufferedImage.TYPE_INT_RGB);
         g2d = bufferedImage.createGraphics();
+        g2d.fillRect(0, 0, width * 3, height * 3);
         g2d.drawImage(img, 0, 0, Color.WHITE, null);
+        g2d.drawImage(img, width * 2, height * 2, Color.WHITE, null);
+        g2d.drawImage(img, 0, height * 2, Color.WHITE, null);
+        g2d.drawImage(img, width * 2, 0, Color.WHITE, null);
     }
 
     private void makeFontSettings(int size, Color c) {
@@ -142,13 +143,13 @@ public class GetFrontServlet extends HttpServlet {
 
     private void drawTextToImage(String line) {
         makeFontSettings(45, Color.BLACK);
-        g2d.drawString(line, width / 2 - (fm.stringWidth(line) / 2), 50);
+        g2d.drawString(line, (width * 3) / 2 - (fm.stringWidth(line) / 2), (height * 3)/2 + 50);
     }
     
     private void drawUrlToImage() {
         url = "http://cs.helsinki.fi/okkopa";
         makeFontSettings(24, Color.BLACK);
-        g2d.drawString(url, width/2 - (fm.stringWidth(url) / 2), height - 50);
+        g2d.drawString(url, (width * 3)/2 - (fm.stringWidth(url) / 2), (height * 3)/2 - 50);
     }
 
     private void closeImages() {
