@@ -13,6 +13,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -21,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
 import org.apache.commons.io.IOUtils;
+import org.apache.pdfbox.exceptions.COSVisitorException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.edit.PDPageContentStream;
@@ -41,6 +44,7 @@ public class GetFrontServlet extends HttpServlet {
     private FontMetrics fm;
     private File file;
     private String url;
+    private float PDFWidth;
 
     /**
      * Processes requests for both HTTP
@@ -53,7 +57,7 @@ public class GetFrontServlet extends HttpServlet {
      * @throws IOException if an I/O error occurs
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws ServletException, IOException, COSVisitorException {
         cource = request.getParameter("cource");
 
         System.out.println(cource);
@@ -82,7 +86,11 @@ public class GetFrontServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        try {
+            processRequest(request, response);
+        } catch (COSVisitorException ex) {
+            Logger.getLogger(GetFrontServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /**
@@ -97,7 +105,11 @@ public class GetFrontServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        try {
+            processRequest(request, response);
+        } catch (COSVisitorException ex) {
+            Logger.getLogger(GetFrontServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /**
@@ -154,26 +166,32 @@ public class GetFrontServlet extends HttpServlet {
     }
 
     private void addFileAsResponse(HttpServletResponse response) throws IOException, FileNotFoundException {
-        InputStream is = new FileInputStream("temp.png");
-        response.setContentType("image/png");
-        response.setHeader("Content-Disposition", "attachment; filename=frontreference.png");
+        InputStream is = new FileInputStream("temp.pdf");
+        response.setContentType("application/pdf");
+        response.setHeader("Content-Disposition", "attachment; filename=frontreference.pdf");
         IOUtils.copy(is, response.getOutputStream());
         response.flushBuffer();
     }
 
-    private void writeDownImage() throws IOException {
+    private void writeDownImage() throws IOException, COSVisitorException {
         file = new File("temp.jpg");
         ImageIO.write(bufferedImage, "jpg", file);
 
         PDDocument document = new PDDocument();
         PDPage page = new PDPage(PDPage.PAGE_SIZE_A3);
         document.addPage(page);
+        
+        ;
 
-        PDXObjectImage ximage = null;
-        ximage = new PDJpeg(document, new FileInputStream("temp.png"));
+        PDXObjectImage ximage;
+        ximage = new PDJpeg(document, new FileInputStream("temp.jpg"));
 
+        PDFWidth = page.findCropBox().getWidth();
+        
         PDPageContentStream contentStream = new PDPageContentStream(document, page, true, true);
-        contentStream.drawImage(ximage, 425, 675);
+        contentStream.drawXObject(ximage, 0, (page.findCropBox().getHeight() - PDFWidth) / 2, PDFWidth, PDFWidth);
         contentStream.close();
+        
+        document.save("temp.pdf");
     }
 }
