@@ -1,6 +1,7 @@
 package fi.helsinki.cs.web;
 
 import fi.helsinki.cs.okkopa.database.OkkopaDatabase;
+import fi.helsinki.cs.okkopa.database.Settings;
 import fi.helsinki.cs.okkopa.reference.Reference;
 import fi.helsinki.cs.okkopa.reference.Warning;
 import java.io.IOException;
@@ -44,25 +45,11 @@ public class AddReferenceServlet extends HttpServlet {
                 if (noErrorsSoFar == true) {
                     noErrorsSoFar = checkIfTypo();
                 }
-                if (noErrorsSoFar == true) {
-                    if (OkkopaDatabase.isOpen() == false) {
-                        database = new OkkopaDatabase();
-                    }
-                    if (OkkopaDatabase.QRCodeExists(code)) {
-                        if (OkkopaDatabase.addUSer(code, id)) {
-                            Warning.setWarning("homma OK! Koe tulee sinulle kunhan se on tarkistettu.");
-                        } else {
-                            Warning.setWarning("Joku oli jo rekisteröitynyt antamallesi QR-koodille. Ota yhteyttä Ossiin, ja selvitä hässäkkä.");
-                        }
-                    } else {
-                        Warning.setWarning("antamaasi viitettä ei löytynyt, etkai vaan yritä syöttää paskaa sisään?");
-                    }
-                    OkkopaDatabase.closeConnectionSource();
-                }
+                doTheThingsIfNoErrors();
             }
 
-            request.setAttribute("message", "OKKoPa viitteiden rekisteröinti");
-
+            request.setAttribute("message", Settings.instance.getProperty("gui.add.header"));
+            request.setAttribute("help", Settings.instance.getProperty("gui.add.help"));
             request.setAttribute("warning", Warning.getWarning());
 
             RequestDispatcher dispatcher = request.getRequestDispatcher("add.jsp");
@@ -136,8 +123,7 @@ public class AddReferenceServlet extends HttpServlet {
     }
 
     private void setReferenceTypoWarning() {
-        String warning = "Kirjoitit viitteesi väärin, tarkista oikeinkirjoitus. ";
-        Warning.setWarning(warning);
+        Warning.setWarning(Settings.instance.getProperty("gui.add.reference.typo"));
     }
 
     private boolean stringContainsInteger() {
@@ -152,8 +138,34 @@ public class AddReferenceServlet extends HttpServlet {
 
     private void checkUsername() {
         if (id.length() <= 2) {
-            Warning.setWarning("Käyttäjätunnus pitää olla yli kaksi merkkiä pitkä.");
+            Warning.setWarning(Settings.instance.getProperty("gui.add.username.typo"));
             noErrorsSoFar = false;
+        }
+    }
+
+    private void tryToAddQRCodeToUser() throws SQLException {
+        if (OkkopaDatabase.addUSer(code, id)) {
+            Warning.setWarning(Settings.instance.getProperty("gui.add.username.ok"));
+        } else {
+            Warning.setWarning(Settings.instance.getProperty("gui.add.username.double"));
+        }
+    }
+
+    private void checkIfQRCodeExists() throws SQLException {
+        if (OkkopaDatabase.QRCodeExists(code)) {
+            tryToAddQRCodeToUser();
+        } else {
+            Warning.setWarning(Settings.instance.getProperty("gui.add.username.noreferenceondb"));
+        }
+    }
+
+    private void doTheThingsIfNoErrors() throws SQLException {
+        if (noErrorsSoFar == true) {
+            if (OkkopaDatabase.isOpen() == false) {
+                database = new OkkopaDatabase();
+            }
+            checkIfQRCodeExists();
+            OkkopaDatabase.closeConnectionSource();
         }
     }
 }

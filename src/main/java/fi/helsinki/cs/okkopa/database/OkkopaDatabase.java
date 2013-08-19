@@ -23,9 +23,9 @@ public class OkkopaDatabase {
 
     @Autowired
     public OkkopaDatabase() throws SQLException {
-        String databaseUrl = "jdbc:h2:okkopa";
-        String username = "okkopa";
-        String password = "Okkopa2013";
+        String databaseUrl = Settings.instance.getProperty("database.h2.url");
+        String username = Settings.instance.getProperty("database.h2.user");
+        String password = Settings.instance.getProperty("database.h2.password");
 
         // create a connection source to our database
         connectionSource = new JdbcConnectionSource(databaseUrl, username, password);

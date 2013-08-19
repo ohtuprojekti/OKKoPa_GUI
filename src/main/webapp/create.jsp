@@ -9,8 +9,10 @@
     <body>
         <h1>${message}</h1>
 
-        <p>${warning}</p>
-
+        <p>${help}</p>
+        
+        <p> - - - - - - - - </p>
+        
         <form name="getReference"
               action="${pageContext.request.contextPath}/getreference"
               method="post">

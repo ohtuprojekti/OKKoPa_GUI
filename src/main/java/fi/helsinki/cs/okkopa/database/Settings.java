@@ -5,27 +5,41 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Manages and reads XML files.
  */
-public class Settings {
+public class Settings extends Properties {
 
+    /**
+     *
+     */
+    public static Settings instance = readSettingXML2("settings.xml");
+    
     public Settings(String fileName) throws FileNotFoundException, IOException {
-        this.settings = readSettingXML(fileName);
-        
+        Properties props = readSettingXML(fileName);
+
         try {
-            this.settings.putAll(readSettingXML("passwords.xml"));
+            props.putAll(readSettingXML("passwords.xml"));
         } catch (FileNotFoundException ex) {
         } catch (IOException ex) {
         }
-    }
-    private Properties settings;
-
-    public Properties getSettings() {
-        return this.settings;
+        this.putAll(props);
     }
 
+    private static Settings readSettingXML2(String fileName) {
+        try {
+            return new Settings(fileName);
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(Settings.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Settings.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
+    
     private Properties readSettingXML(String fileName) throws FileNotFoundException, IOException {
         Properties currentProps = new Properties();
 

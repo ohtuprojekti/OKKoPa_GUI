@@ -19,7 +19,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.xpath.operations.Equals;
 
 /**
  *
@@ -36,7 +35,9 @@ public class FrontServlet extends HttpServlet {
     private String courceCode;
     private String courceName;
     private String courceYear;
-    private String value2;
+    private String valueName;
+    private List<CourseDbModel> cources;
+    private OracleConnector oc;
 
     /**
      * Processes requests for both HTTP
@@ -50,42 +51,24 @@ public class FrontServlet extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, SQLException {
-        request.setAttribute("message", "OKKoPa viitteiden luonti");
-
-        OracleConnector oc = new OracleConnector(new Settings("settings.xml"));
-        oc.connect();
-
-        list = new ArrayList<String>();
-        values = new ArrayList<String>();
+        request.setAttribute("message", Settings.instance.getProperty("gui.front.header"));
+        request.setAttribute("help", Settings.instance.getProperty("gui.front.help"));
         
-        List<CourseDbModel> cources = oc.getCourseList();
+        oc = connectToDB();
+        
+        cources = formatAndGetCources();
 
         for (int i = 0; i < cources.size(); i++) {
             
-            courceCode = cources.get(i).getCourseCode();
-            courceName = cources.get(i).getName();
-            courceNumber = "" + cources.get(i).getCourseNumber();
-            courcePeriod = cources.get(i).getPeriod();
-            courceType = cources.get(i).getType();
-            courceYear = "" + cources.get(i).getYear();
+            getValues(i);
 
-            value = courceCode + ":" + courcePeriod + ":" + courceYear + ":" + courceType + ":" + courceNumber;
+            parseValue();
+            parseForNameValue(i);
             
-            parseName(i);
-            parsePeriod(i);
-            parseType(i);
-            parseNumber(i);
-            
-            value2 = courceName + " (" + courceCode + "), " + courceYear + ", " + courcePeriod + ", " + courceType + ", " + courceNumber;
-            
-            list.add("<option value=\"" + value+ "\">" + value2 + "</option>");
+            list.add("<option value=\"" + value+ "\">" + valueName + "</option>");
         }
 
-        Collections.sort(list);
-
-        request.setAttribute("courceCodes", list);
-
-//        request.setAttribute("warning", Warning.getWarning());  
+        setCourcesForForm( request); 
 
         RequestDispatcher dispatcher = request.getRequestDispatcher("front.jsp");
         dispatcher.forward(request, response);
@@ -174,5 +157,46 @@ public class FrontServlet extends HttpServlet {
         } else if (courceNumber.equals("2")) {
             courceNumber = "Erilliskoe";
         }
+    }
+
+    private void getValues(int i) {
+        courceCode = cources.get(i).getCourseCode();
+        courceName = cources.get(i).getName();
+        courceNumber = "" + cources.get(i).getCourseNumber();
+        courcePeriod = cources.get(i).getPeriod();
+        courceType = cources.get(i).getType();
+        courceYear = "" + cources.get(i).getYear();
+    }
+
+    private void parseForNameValue(int i) {
+        parseName(i);
+        parsePeriod(i);
+        parseType(i);
+        parseNumber(i);
+        
+        valueName = courceName + " (" + courceCode + "), " + courceYear + ", " + courcePeriod + ", " + courceType + ", " + courceNumber;
+    }
+
+    private List<CourseDbModel> formatAndGetCources() throws SQLException {
+        list = new ArrayList<String>();
+        values = new ArrayList<String>();
+        List<CourseDbModel> cources = oc.getCourseList();
+        return cources;
+    }
+
+    private OracleConnector connectToDB() throws SQLException {
+        OracleConnector oc = new OracleConnector(Settings.instance);
+        oc.connect();
+        return oc;
+    }
+
+    private void parseValue() {
+        value = courceCode + ":" + courcePeriod + ":" + courceYear + ":" + courceType + ":" + courceNumber;
+    }
+
+    private void setCourcesForForm(HttpServletRequest request) {
+        Collections.sort(list);
+
+        request.setAttribute("courceCodes", list);
     }
 }

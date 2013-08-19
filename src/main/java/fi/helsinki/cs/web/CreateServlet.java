@@ -1,5 +1,6 @@
 package fi.helsinki.cs.web;
 
+import fi.helsinki.cs.okkopa.database.Settings;
 import java.io.IOException;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -21,9 +22,8 @@ public class CreateServlet extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.setAttribute("message", "OKKoPa viitteiden luonti");
-        
-//        request.setAttribute("warning", Warning.getWarning());  
+        request.setAttribute("message", Settings.instance.getProperty("gui.create.header"));
+        request.setAttribute("help", Settings.instance.getProperty("gui.create.help"));
         
         RequestDispatcher dispatcher = request.getRequestDispatcher("create.jsp");
         dispatcher.forward(request, response);

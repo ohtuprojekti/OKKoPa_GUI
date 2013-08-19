@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package fi.helsinki.cs.web;
 
 import java.awt.Color;
@@ -26,10 +22,6 @@ import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
 import org.apache.commons.io.IOUtils;
 
-/**
- *
- * @author tatutall
- */
 public class GetFrontServlet extends HttpServlet {
 
     private String cource;

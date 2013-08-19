@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-            <title>jQuery Searchable DropDown Plugin Demo</title>
+            <title>${message}</title>
 
             <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
             <script type="text/javascript" src="jquery.searchabledropdown-1.0.8.min.js"></script>
@@ -27,6 +27,13 @@
             </script>
     </head>
     <body>
+        
+        <h1>${message}</h1>
+        
+        <p>${help}</p>
+        
+        <p> - - - - - - - - </p>
+        
         <form name="getReference"
               action="${pageContext.request.contextPath}/getfront"
               method="post">

@@ -9,6 +9,10 @@
     <body>
         <h1>${message}</h1>
         
+        <p>${help}</p>
+        
+        <p> - - - - - - - - </p>
+        
         <p>${warning}</p>
 
         <form name="newReference"
