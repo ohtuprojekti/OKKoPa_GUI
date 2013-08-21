@@ -35,7 +35,7 @@ Näemmä hyvin.
      
     <!-- Database settings -->
     <!-- Url without .h2.db in the end. -->
-    <entry key="database.h2.url">jdbc:h2:okkopa</entry>
+    <entry key="database.h2.url">jdbc:h2:okkopa;AUTO_SERVER=TRUE</entry>
     <entry key="database.h2.user">okkopa</entry>
     
     <!-- Oracle settings (Kurki) -->
@@ -80,6 +80,9 @@ Näemmä hyvin.
     <entry key="gui.front.help">Tarvitsetko apua? Ota yhteys Ossiin!</entry>
     <entry key="gui.front.link">Kansilehtien luonti (luennoitsijat)</entry>
     <entry key="gui.front.info">Lisätietoa kannesta</entry>
+    
+    <entry key="gui.front.infofield">Opiskelijoille lähtevä info</entry>
+    <entry key="gui.front.emailfield">Luennoitsijan/assarin email</entry>
     
     <entry key="gui.create.header">OKKoPa - viitteiden luonti</entry>
     <entry key="gui.create.help">Tarvitsetko apua? Ota yhteys Ossiin!</entry>

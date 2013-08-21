@@ -27,13 +27,13 @@
             </script>
     </head>
     <body>
-        
+
         <h1>${message}</h1>
-        
+
         <p>${help}</p>
-        
+
         <p> - - - - - - - - </p>
-        
+
         <form name="getReference"
               action="${pageContext.request.contextPath}/getfront"
               method="post">
@@ -42,8 +42,17 @@
                 <c:forEach var="cource" items="${courceCodes}">
                     ${cource}</c:forEach>
             </select>
-            <br />
-            <input type="submit" name="Lähetä" />
+            <table>
+                <tr>
+                    <td>${info}</td><td><textarea rows="4" cols="50" name="info"></textarea></td>
+                </tr>
+                <tr>
+                    <td>${email}</td><td><input type="text" name="email" /></td>
+                </tr>
+                <tr>
+                    <td></td><td><input type="submit" name="Lähetä" /></td>
+                </tr>
+            </table>      
         </form>
     </body>
 </html>

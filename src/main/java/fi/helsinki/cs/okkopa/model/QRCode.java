@@ -1,4 +1,3 @@
-
 package fi.helsinki.cs.okkopa.model;
 
 import com.j256.ormlite.field.DatabaseField;

@@ -53,6 +53,8 @@ public class FrontServlet extends HttpServlet {
             throws ServletException, IOException, SQLException {
         request.setAttribute("message", Settings.instance.getProperty("gui.front.header"));
         request.setAttribute("help", Settings.instance.getProperty("gui.front.help"));
+        request.setAttribute("info", Settings.instance.getProperty("gui.front.infofield"));
+        request.setAttribute("email", Settings.instance.getProperty("gui.front.emailfield"));
         
         oc = connectToDB();
         
