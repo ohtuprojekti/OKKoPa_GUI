@@ -1,5 +1,7 @@
 package fi.helsinki.cs.web;
 
+import fi.helsinki.cs.okkopa.database.OkkopaDatabase;
+import fi.helsinki.cs.okkopa.model.BatchDbModel;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -7,13 +9,10 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -42,10 +41,14 @@ public class GetFrontServlet extends HttpServlet {
     private Graphics2D g2d;
     private Font font;
     private FontMetrics fm;
-    private File file;
     private String url;
     private float PDFWidth;
     private ByteArrayInputStream inStream;
+    private String name;
+    private String infoID;
+    private String email;
+    private String info;
+    private OkkopaDatabase database;
 
     /**
      * Processes requests for both HTTP
@@ -58,10 +61,12 @@ public class GetFrontServlet extends HttpServlet {
      * @throws IOException if an I/O error occurs
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException, COSVisitorException {
-        cource = request.getParameter("cource");
+            throws ServletException, IOException, COSVisitorException, SQLException {
 
-        System.out.println(cource);
+        parseCource(request);
+        parseEmailAndInfo(request);
+
+        addInfoAndEmailToDB();
 
         makeQRCodeImage(cource);
         makeGraphics2DForRender();
@@ -89,7 +94,7 @@ public class GetFrontServlet extends HttpServlet {
             throws ServletException, IOException {
         try {
             processRequest(request, response);
-        } catch (COSVisitorException ex) {
+        } catch (SQLException | COSVisitorException ex) {
             Logger.getLogger(GetFrontServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -108,7 +113,7 @@ public class GetFrontServlet extends HttpServlet {
             throws ServletException, IOException {
         try {
             processRequest(request, response);
-        } catch (COSVisitorException ex) {
+        } catch (SQLException | COSVisitorException ex) {
             Logger.getLogger(GetFrontServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -125,7 +130,7 @@ public class GetFrontServlet extends HttpServlet {
 
     private void makeQRCodeImage(String line) throws FileNotFoundException, IOException {
         stream = QRCode.from(line).to(ImageType.PNG).withSize(500, 500).stream();
-        
+
         inStream = new ByteArrayInputStream(stream.toByteArray());
         img = ImageIO.read(inStream);
     }
@@ -152,6 +157,8 @@ public class GetFrontServlet extends HttpServlet {
     private void drawTextToImage(String line) {
         makeFontSettings(45, Color.BLACK);
         g2d.drawString(line, (width * 3) / 2 - (fm.stringWidth(line) / 2), (height * 3) / 2 + 50);
+
+        g2d.drawString(name, (width * 3) / 2 - (fm.stringWidth(name) / 2), (height * 3) / 2 + 150);
     }
 
     private void drawUrlToImage() {
@@ -176,9 +183,9 @@ public class GetFrontServlet extends HttpServlet {
         PDDocument document = new PDDocument();
         PDPage page = new PDPage(PDPage.PAGE_SIZE_A3);
         document.addPage(page);
-        
+
         addImageToPDF(document, page);
-        
+
         stream.reset();
         document.save(stream);
     }
@@ -186,11 +193,54 @@ public class GetFrontServlet extends HttpServlet {
     private void addImageToPDF(PDDocument document, PDPage page) throws IOException {
         PDXObjectImage ximage;
         ximage = new PDJpeg(document, bufferedImage);
-        
+
         PDFWidth = page.findCropBox().getWidth();
-        
+
         PDPageContentStream contentStream = new PDPageContentStream(document, page, true, true);
         contentStream.drawXObject(ximage, 0, (page.findCropBox().getHeight() - PDFWidth) / 2, PDFWidth, PDFWidth);
         contentStream.close();
+    }
+
+    private void parseCource(HttpServletRequest request) {
+        String[] fields = request.getParameter("cource").split(":");
+
+        parceQRCodePart(fields);
+
+        infoID = fields[5];
+
+        parseName(fields);
+    }
+
+    private void parceQRCodePart(String[] fields) {
+        cource = "";
+        boolean first = true;
+        for (int i = 0; i < 6; i++) {
+            if (first) {
+                first = false;
+            } else {
+                cource += ":";
+            }
+            cource += fields[i];
+        }
+    }
+
+    private void parseName(String[] fields) {
+        name = "";
+        for (int i = 6; i < fields.length; i++) {
+            name += fields[i];
+        }
+    }
+
+    private void parseEmailAndInfo(HttpServletRequest request) {
+        email = request.getParameter("email");
+        info = request.getParameter("info");
+    }
+
+    private void addInfoAndEmailToDB() throws SQLException {
+        if (OkkopaDatabase.isOpen() == false) {
+            database = new OkkopaDatabase();
+        }
+        OkkopaDatabase.addBatchDetails(new BatchDbModel("246583", info, email));
+        OkkopaDatabase.closeConnectionSource();
     }
 }

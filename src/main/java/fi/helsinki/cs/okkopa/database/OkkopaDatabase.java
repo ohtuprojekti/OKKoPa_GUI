@@ -3,25 +3,30 @@ package fi.helsinki.cs.okkopa.database;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
+import com.j256.ormlite.stmt.PreparedQuery;
+import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
-import fi.helsinki.cs.okkopa.model.QRCode;
+import fi.helsinki.cs.okkopa.model.BatchDbModel;
+import fi.helsinki.cs.okkopa.model.MissedExamDbModel;
+import fi.helsinki.cs.okkopa.model.QRCodeDbModel;
 import java.sql.SQLException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
-@Component
 public class OkkopaDatabase {
 
-    private static Dao<QRCode, String> qrcodeDao;
+    private static Dao<QRCodeDbModel, String> qrcodeDao;
     private static ConnectionSource connectionSource;
     private static boolean open = false;
+    private static Dao<MissedExamDbModel, Void> missedExamDao;
+    private static Dao<BatchDbModel, String> batchDbDao;
 
     public static boolean isOpen() {
         return open;
     }
 
-    @Autowired
     public OkkopaDatabase() throws SQLException {
         String databaseUrl = Settings.instance.getProperty("database.h2.url");
         String username = Settings.instance.getProperty("database.h2.user");
@@ -31,15 +36,19 @@ public class OkkopaDatabase {
         connectionSource = new JdbcConnectionSource(databaseUrl, username, password);
 
         // instantiate the dao
-        qrcodeDao = DaoManager.createDao(connectionSource, QRCode.class);
-
-        // if you need to create the 'accounts' table make this call
-        TableUtils.createTableIfNotExists(connectionSource, QRCode.class);
+        qrcodeDao = DaoManager.createDao(connectionSource, QRCodeDbModel.class);
+        TableUtils.createTableIfNotExists(connectionSource, QRCodeDbModel.class);
+        
+        missedExamDao = DaoManager.createDao(connectionSource, MissedExamDbModel.class);
+        TableUtils.createTableIfNotExists(connectionSource, MissedExamDbModel.class);
+        
+        batchDbDao = DaoManager.createDao(connectionSource, BatchDbModel.class);
+        TableUtils.createTableIfNotExists(connectionSource, BatchDbModel.class);
         open = true;
     }
 
     public static String getUserID(String qrcodeString) throws SQLException {
-        QRCode qrCode = qrcodeDao.queryForId(qrcodeString);
+        QRCodeDbModel qrCode = qrcodeDao.queryForId(qrcodeString);
         if (qrCode == null) {
             return null;
         }
@@ -47,7 +56,7 @@ public class OkkopaDatabase {
     }
 
     public static boolean addQRCode(String QRCode) throws SQLException {
-        QRCode qrCode = new QRCode(QRCode, "");
+        QRCodeDbModel qrCode = new QRCodeDbModel(QRCode, null);
 
         if (qrcodeDao.idExists(QRCode) == false) {
             qrcodeDao.createIfNotExists(qrCode);
@@ -64,14 +73,36 @@ public class OkkopaDatabase {
     }
 
     public static boolean addUSer(String QRCode, String UserId) throws SQLException {
-        QRCode qrCode = qrcodeDao.queryForId(QRCode);
+        QRCodeDbModel qrCode = qrcodeDao.queryForId(QRCode);
         
-        if (qrCode.getUserId().equals("")) {
-            qrCode = new QRCode(QRCode, UserId);
+        if (qrCode.getUserId() == null) {
+            qrCode = new QRCodeDbModel(QRCode, UserId);
             qrcodeDao.update(qrCode);
             return true;
         }
         return false;
+    }
+    
+    public static void addMissedExam(String anonymousCode) throws SQLException {
+        QRCodeDbModel qrCode = new QRCodeDbModel(anonymousCode, null);
+        MissedExamDbModel missedExam = new MissedExamDbModel(qrCode);
+        missedExamDao.create(missedExam);
+    }
+    
+    public static List<Date> getMissedExams(String anonymousCode) throws SQLException {      
+        QueryBuilder<MissedExamDbModel, Void> queryBuilder = missedExamDao.queryBuilder();
+        PreparedQuery prepQuery = queryBuilder.where().eq("qrCode", anonymousCode).prepare();
+        
+        List<MissedExamDbModel> missedExams = missedExamDao.query(prepQuery);
+        List<Date> result = new ArrayList<Date>();
+        for (MissedExamDbModel model : missedExams) {
+            result.add(model.getDate());
+        }
+        return result;
+    }
+    
+    public static void addBatchDetails(BatchDbModel batchInfo) throws SQLException {
+        batchDbDao.createIfNotExists(batchInfo);
     }
 
     public static void closeConnectionSource() throws SQLException {

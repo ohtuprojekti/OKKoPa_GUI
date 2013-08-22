@@ -4,7 +4,7 @@
 
     <groupId>fi.helsinki.cs</groupId>
     <artifactId>OKKoPa_GUI</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
     <packaging>war</packaging>
 
     <name>OKKoPa_GUI</name>

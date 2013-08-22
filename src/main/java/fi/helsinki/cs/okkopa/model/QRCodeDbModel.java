@@ -3,28 +3,28 @@ package fi.helsinki.cs.okkopa.model;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
-@DatabaseTable(tableName = "qrcodes")
-public class QRCode {
-    
+@DatabaseTable(tableName = "qrCodes")
+public class QRCodeDbModel {
+
     @DatabaseField(id = true, columnName = "qrCode")
-    private String QRCodeString;
+    private String qrCodeString;
     @DatabaseField(columnName = "userId")
     private String userId;
-    
-    public QRCode() {
+
+    public QRCodeDbModel() {
     }
 
-    public QRCode(String QRCodeString, String userId) {
-        this.QRCodeString = QRCodeString;
+    public QRCodeDbModel(String qrCodeString, String userId) {
+        this.qrCodeString = qrCodeString;
         this.userId = userId;
     }
 
     public String getQRCodeString() {
-        return QRCodeString;
+        return qrCodeString;
     }
 
-    public void setQRCodeString(String QRCodeString) {
-        this.QRCodeString = QRCodeString;
+    public void setQRCodeString(String qrCodeString) {
+        this.qrCodeString = qrCodeString;
     }
 
     public String getUserId() {

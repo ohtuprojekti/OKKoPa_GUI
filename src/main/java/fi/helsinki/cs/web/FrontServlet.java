@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package fi.helsinki.cs.web;
 
 import fi.helsinki.cs.okkopa.database.OracleConnector;
@@ -20,10 +16,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-/**
- *
- * @author tatutall
- */
 public class FrontServlet extends HttpServlet {
 
     private ArrayList<String> list;
@@ -31,7 +23,6 @@ public class FrontServlet extends HttpServlet {
     private String courceType;
     private String courceNumber;
     private String value;
-    private ArrayList<String> values;
     private String courceCode;
     private String courceName;
     private String courceYear;
@@ -126,12 +117,17 @@ public class FrontServlet extends HttpServlet {
     }// </editor-fold>
 
     private void parseName(int i) {
-        if (courceName.length() >= 70) {
-            courceName = courceName.substring(0, 67) + "...";
+        courceName = getParseName(i);
+    }
+    
+    private String getParseName(int size) {
+        if (courceName.length() >= size) {
+            return courceName.substring(0, size-3) + "...";
         }
+        return courceName;
     }
 
-    private void parsePeriod(int i) {
+    private void parsePeriod() {
         if (courcePeriod.equals("K")) {
             courcePeriod = "kevät";
         } else if (courcePeriod.equals("S")) {
@@ -141,7 +137,7 @@ public class FrontServlet extends HttpServlet {
         }
     }
 
-    private void parseType(int i) {
+    private void parseType() {
         if (courceType.equals("L")) {
             courceType = "Luento";
         } else if (courceType.equals("K")) {
@@ -153,7 +149,7 @@ public class FrontServlet extends HttpServlet {
         }
     }
 
-    private void parseNumber(int i) {
+    private void parseNumber() {
         if (courceNumber.equals("1")) {
             courceNumber = "Kurssi";
         } else if (courceNumber.equals("2")) {
@@ -171,19 +167,17 @@ public class FrontServlet extends HttpServlet {
     }
 
     private void parseForNameValue(int i) {
-        parseName(i);
-        parsePeriod(i);
-        parseType(i);
-        parseNumber(i);
+        parseName(70);
+        parsePeriod();
+        parseType();
+        parseNumber();
         
         valueName = courceName + " (" + courceCode + "), " + courceYear + ", " + courcePeriod + ", " + courceType + ", " + courceNumber;
     }
 
     private List<CourseDbModel> formatAndGetCources() throws SQLException {
         list = new ArrayList<String>();
-        values = new ArrayList<String>();
-        List<CourseDbModel> cources = oc.getCourseList();
-        return cources;
+        return oc.getCourseList();
     }
 
     private OracleConnector connectToDB() throws SQLException {
@@ -193,7 +187,7 @@ public class FrontServlet extends HttpServlet {
     }
 
     private void parseValue() {
-        value = courceCode + ":" + courcePeriod + ":" + courceYear + ":" + courceType + ":" + courceNumber;
+        value =  courceCode + ":" + courcePeriod + ":" + courceYear + ":" + courceType + ":" + courceNumber + ":34324:" + getParseName(55);
     }
 
     private void setCourcesForForm(HttpServletRequest request) {

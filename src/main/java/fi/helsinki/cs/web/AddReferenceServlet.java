@@ -6,6 +6,8 @@ import fi.helsinki.cs.okkopa.reference.Reference;
 import fi.helsinki.cs.okkopa.reference.Warning;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Date;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.RequestDispatcher;
@@ -20,7 +22,6 @@ public class AddReferenceServlet extends HttpServlet {
     private String id;
     private String code;
     private boolean noErrorsSoFar;
-    private boolean typos;
     private OkkopaDatabase database;
 
     /**
@@ -143,17 +144,21 @@ public class AddReferenceServlet extends HttpServlet {
         }
     }
 
-    private void tryToAddQRCodeToUser() throws SQLException {
+    private boolean tryToAddQRCodeToUser() throws SQLException {
         if (OkkopaDatabase.addUSer(code, id)) {
             Warning.setWarning(Settings.instance.getProperty("gui.add.username.ok"));
+            return true;
         } else {
             Warning.setWarning(Settings.instance.getProperty("gui.add.username.double"));
+            return false;
         }
     }
 
     private void checkIfQRCodeExists() throws SQLException {
         if (OkkopaDatabase.QRCodeExists(code)) {
-            tryToAddQRCodeToUser();
+            if (tryToAddQRCodeToUser()) {
+                checkIfMissedExams();
+            }
         } else {
             Warning.setWarning(Settings.instance.getProperty("gui.add.username.noreferenceondb"));
         }
@@ -166,6 +171,17 @@ public class AddReferenceServlet extends HttpServlet {
             }
             checkIfQRCodeExists();
             OkkopaDatabase.closeConnectionSource();
+        }
+    }
+
+    private void checkIfMissedExams() throws SQLException {
+        List<Date> missedExams = OkkopaDatabase.getMissedExams(code);
+
+        if (missedExams.size() > 0) {
+            Warning.setWarning(Settings.instance.getProperty("gui.add.missedexams"));
+            for (Date date : missedExams) {
+                Warning.setWarning(date.toString());
+            }
         }
     }
 }
